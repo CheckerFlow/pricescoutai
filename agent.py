@@ -21,7 +21,7 @@ model = ChatOpenAI(model="gpt-4o-mini")
 
 # Define the item name
 #item_name = "Lego Ritterburg 6080"
-#item_name = "Bosch Rotak 43 Li"
+item_name = "Bosch Rotak 43 Li"
 #item_name = "Bosch AHS 55-24 Li"
 #item_name = "Bosch AHS 70-34"
 #item_name = "Bosch VeroAroma 300"
@@ -36,20 +36,22 @@ kleinanzeigen_prices = format_results_as_table(sort_results_by_price(scrape_klei
 # print(f"Kleinanzeigen prices: {kleinanzeigen_prices}")
 
 # Define the system and user templates
-system_template = """You are a researcher who is analyzing the prices of items on eBay and Kleinanzeigen. 
-                  You have two functions that scrape the prices of items from eBay and Kleinanzeigen.
-                  You provide recommendations to users based on the prices of items."""
+system_template = """Sie sind ein Forscher, der die Preise von Artikeln auf eBay und Kleinanzeigen analysiert. 
+                  Sie haben zwei Funktionen, die die Preise von Artikeln von eBay und Kleinanzeigen scrapen.
+                  Sie geben Empfehlungen an Benutzer basierend auf den Preisen der Artikel."""
 
 user_template = """
-                Analyze the following prices of items on eBay and Kleinanzeigen:
+                Analysieren Sie die folgenden Preise von Artikeln auf eBay und Kleinanzeigen:
                 
-                Prices for {item_name} on eBay: 
+                Preise für {item_name} auf eBay: 
                 {ebay_prices}
 
-                Prices for {item_name} on Kleinanzeigen: 
+                Preise für {item_name} auf Kleinanzeigen: 
                 {kleinanzeigen_prices}
 
-                What is your recommended price range for {item_name}?"""
+                Fokussiere nur auf vollständige Artikel, nicht auf Ersatzteile oder einzelne Bestandteile.
+
+                Was ist Ihre empfohlene Preisspanne für {item_name}?"""
 
 prompt_template = ChatPromptTemplate([
     ("system", system_template),
