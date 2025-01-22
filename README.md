@@ -18,12 +18,22 @@ The following libraries are used:
 ## How to use
 
 1. Clone the project 
-2. 
+2. Install the prerequisites
 3. Make a copy of `.env-template` to `.env` and specify your OpenAI API key
 4. Specify an article name in variable `item_name`
 5. On the command 
 
-## How it works
+## Streamlit app
+
+The project provides a [Streamlit](https://streamlit.io/) app that can be run locally.
+
+To run the app, execute the following command on a command prompt:
+
+> streamlit run app.py
+
+![Example: Price Agent with query](images/priceagent_streamlit_app_example_lego_ritterburg_6080.jpg)
+
+## agent.py - How it works
 
 ### Step 1
 
