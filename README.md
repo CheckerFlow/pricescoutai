@@ -10,10 +10,9 @@ The project combines webscraping with an LLM.
 
 This project requires Python 3.10.4 or higher.
 
-The following libraries are used: 
+To install the required libraries via `pip` execute the following command:
 
-> pip install langchain
-> pip install streamlit
+> pip install -r requirements.txt
 
 ## How to use
 
