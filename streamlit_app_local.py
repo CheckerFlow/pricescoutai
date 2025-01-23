@@ -14,16 +14,6 @@ from scrape_results_helpers import sort_results_by_price, format_results_as_tabl
 # Load environment variables from .env file
 load_dotenv()
 
-# Custom CSS to change font size
-custom_css = """
-<style>
-body {
-    font-size: 26px;
-}
-</style>
-"""
-st.markdown(custom_css, unsafe_allow_html=True)
-
 st.title("Preisanalyse Assistent für eBay und Kleinanzeigen")
 st.write("Dieser Assistent unterstützt Sie bei der Preisanalyse von Artikeln auf eBay und Kleinanzeigen.")
 

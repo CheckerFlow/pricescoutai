@@ -29,7 +29,7 @@ The project provides a [Streamlit](https://streamlit.io/) app that can be run lo
 
 To run the app, execute the following command on a command prompt:
 
-> streamlit run app.py
+> streamlit run streamlit_app_local.py
 
 ![Example: Price Agent with query](images/priceagent_streamlit_app_example_lego_ritterburg_6080.jpg)
 
