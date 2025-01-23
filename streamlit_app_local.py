@@ -29,27 +29,30 @@ memory = ConversationBufferMemory()
 conversation = ConversationChain(llm=llm, memory=memory)
 
 # User input
-user_input = st.text_input("**Du**: ", "")
+user_input = st.text_input("**Artikel**: ", "")
 
 item_name = user_input
 
-#  Scrape prices from eBay and Kleinanzeigen
-ebay_prices = format_results_as_table(sort_results_by_price(scrape_ebay_prices(item_name)))
-kleinanzeigen_prices = format_results_as_table(sort_results_by_price(scrape_kleinanzeigen_prices(item_name)))
-
-#if user_input:
-#    st.session_state['messages'].append({"role": "user", "content": user_input})
-#    response = conversation.predict(input=user_input)
-#    st.session_state['messages'].append({"role": "assistant", "content": response})
-
 if user_input:
     st.session_state['messages'].append({"role": "user", "content": user_input})
+
+    # Scrape prices from eBay and Kleinanzeigen
+    with st.spinner('Suche bei eBay nach passenden Artikeln...'):
+        ebay_prices = format_results_as_table(sort_results_by_price(scrape_ebay_prices(item_name)))
+    
+    with st.spinner('Suche bei Kleinanzeigen nach passenden Artikeln...'):
+        kleinanzeigen_prices = format_results_as_table(sort_results_by_price(scrape_kleinanzeigen_prices(item_name)))    
     
     # Define the role and the question template
     role = """
     Sie sind ein Forscher, der die Preise von Artikeln auf eBay und Kleinanzeigen analysiert. 
-    Sie haben zwei Funktionen, die die Preise von Artikeln von eBay und Kleinanzeigen scrapen.
-    Sie geben Empfehlungen an Benutzer basierend auf den Preisen der Artikel.
+    Ihre Aufgaben umfassen:
+
+    1. Scrapen der Preise von Artikeln auf eBay und Kleinanzeigen.
+    2. Analysieren der gescrapten Preise.
+    3. Geben von Empfehlungen an Benutzer basierend auf den analysierten Preisen.
+
+    Fokussieren Sie sich auf vollständige Artikel und nicht auf Ersatzteile oder einzelne Bestandteile.
     """
     
     question_template = f"""
@@ -60,8 +63,8 @@ if user_input:
 
     Preise für {item_name} auf Kleinanzeigen: 
     {kleinanzeigen_prices}
-
-    Fokussiere nur auf vollständige Artikel, nicht auf Ersatzteile oder einzelne Bestandteile.
+    
+    Fokussieren Sie sich nur auf vollständige Artikel, nicht auf Ersatzteile oder einzelne Bestandteile.
 
     Was ist Ihre empfohlene Preisspanne für {item_name}?
 
@@ -75,8 +78,14 @@ if user_input:
     ]
     
     # Process the messages with the conversation object
-    response = conversation.predict(input=messages)
-    st.session_state['messages'].append({"role": "assistant", "content": response})
+
+    with st.spinner('Generiere Antwort...'):
+        try:
+            # Process the messages with the conversation object
+            response = conversation.predict(input=messages)
+            st.session_state['messages'].append({"role": "assistant", "content": response})
+        except Exception as e:
+            st.error(f"Error generating response: {e}")    
 
 # Display chat history
 for message in st.session_state['messages']:

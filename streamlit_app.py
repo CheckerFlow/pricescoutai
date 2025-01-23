@@ -1,6 +1,5 @@
 # Import the necessary libraries
 #from dotenv import load_dotenv
-
 import streamlit as st
 from langchain_openai import ChatOpenAI
 from langchain.chains import ConversationChain
@@ -11,22 +10,29 @@ from ebay_scraper import scrape_ebay_prices
 from kleinanzeigen_scraper import scrape_kleinanzeigen_prices
 from scrape_results_helpers import sort_results_by_price, format_results_as_table
 
-# Load environment variables from .env file
-#load_dotenv()
+
+# Sidebar
+st.sidebar.header("Einstellungen")
 
 with st.sidebar:
-    openai_api_key = st.text_input("OpenAI API Key", key="openai_api_key", type="password")
-    "[OpenAI API key erhalten](https://platform.openai.com/account/api-keys)"
+    openai_api_key = st.text_input("OpenAI API Key", key="openai_api_key", type="password", help="Geben Sie Ihren OpenAI API-Schlüssel ein.")
+    "[OpenAI API Key erhalten](https://platform.openai.com/account/api-keys)"
 
+# Submit button for API key
+if st.sidebar.button("API Key speichern"):
+    if not openai_api_key:
+        st.sidebar.error("Bitte gib deinen OpenAI API-Schlüssel ein.")
+    else:
+        st.sidebar.success("API Key gespeichert.")
 
 st.title("Preisanalyse Assistent für eBay und Kleinanzeigen")
-st.write("Dieser Assistent unterstützt Sie bei der Preisanalyse von Artikeln auf eBay und Kleinanzeigen.")
+st.write("Dieser Assistent unterstützt dich bei der Preisanalyse von Artikeln auf eBay und Kleinanzeigen.")
 
 if not openai_api_key:
-    st.info("Bitte gib deinen OpenAI API key ein um fortzusetzen.")
+    st.info("Bitte gib deinen OpenAI API Key ein um fortzusetzen.")
     st.stop()
 
-st.write("Bitte geben Sie den Namen des Artikels ein, dessen Preise Sie analysieren möchten.")
+st.write("Bitte gib den Namen des Artikels ein.")
 
 # Initialize session state for chat history
 if 'messages' not in st.session_state:
@@ -37,28 +43,32 @@ llm = ChatOpenAI(model_name="gpt-4o-mini", api_key=openai_api_key)
 memory = ConversationBufferMemory()
 conversation = ConversationChain(llm=llm, memory=memory)
 
-# User input
-user_input = st.text_input("**Du**: ", "")
+# User input form
+with st.form(key='user_input_form'):
+    user_input = st.text_input("**Artikel**: ", "")
+    item_name = user_input
+    submit_button = st.form_submit_button(label='Senden')
 
-item_name = user_input
-
-#  Scrape prices from eBay and Kleinanzeigen
-ebay_prices = format_results_as_table(sort_results_by_price(scrape_ebay_prices(item_name)))
-kleinanzeigen_prices = format_results_as_table(sort_results_by_price(scrape_kleinanzeigen_prices(item_name)))
-
-#if user_input:
-#    st.session_state['messages'].append({"role": "user", "content": user_input})
-#    response = conversation.predict(input=user_input)
-#    st.session_state['messages'].append({"role": "assistant", "content": response})
-
-if user_input:
+if submit_button and user_input:
     st.session_state['messages'].append({"role": "user", "content": user_input})
+
+    # Scrape prices from eBay and Kleinanzeigen
+    with st.spinner('Suche bei eBay nach passenden Artikeln...'):
+        ebay_prices = format_results_as_table(sort_results_by_price(scrape_ebay_prices(item_name)))
+    
+    with st.spinner('Suche bei Kleinanzeigen nach passenden Artikeln...'):
+        kleinanzeigen_prices = format_results_as_table(sort_results_by_price(scrape_kleinanzeigen_prices(item_name)))    
     
     # Define the role and the question template
     role = """
     Sie sind ein Forscher, der die Preise von Artikeln auf eBay und Kleinanzeigen analysiert. 
-    Sie haben zwei Funktionen, die die Preise von Artikeln von eBay und Kleinanzeigen scrapen.
-    Sie geben Empfehlungen an Benutzer basierend auf den Preisen der Artikel.
+    Ihre Aufgaben umfassen:
+
+    1. Scrapen der Preise von Artikeln auf eBay und Kleinanzeigen.
+    2. Analysieren der gescrapten Preise.
+    3. Geben von Empfehlungen an Benutzer basierend auf den analysierten Preisen.
+
+    Fokussieren Sie sich auf vollständige Artikel und nicht auf Ersatzteile oder einzelne Bestandteile.
     """
     
     question_template = f"""
@@ -69,8 +79,8 @@ if user_input:
 
     Preise für {item_name} auf Kleinanzeigen: 
     {kleinanzeigen_prices}
-
-    Fokussiere nur auf vollständige Artikel, nicht auf Ersatzteile oder einzelne Bestandteile.
+    
+    Fokussieren Sie sich nur auf vollständige Artikel, nicht auf Ersatzteile oder einzelne Bestandteile.
 
     Was ist Ihre empfohlene Preisspanne für {item_name}?
 
@@ -84,8 +94,14 @@ if user_input:
     ]
     
     # Process the messages with the conversation object
-    response = conversation.predict(input=messages)
-    st.session_state['messages'].append({"role": "assistant", "content": response})
+
+    with st.spinner('Generiere Antwort...'):
+        try:
+            # Process the messages with the conversation object
+            response = conversation.predict(input=messages)
+            st.session_state['messages'].append({"role": "assistant", "content": response})
+        except Exception as e:
+            st.error(f"Error generating response: {e}")    
 
 # Display chat history
 for message in st.session_state['messages']:
